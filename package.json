@@ -45,12 +45,12 @@
 	},
 	"dependencies": {
 		"@libsql/client": "^0.14.0",
-		"@node-rs/argon2": "^2.0.2",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
 		"@tiptap/core": "^3.0.0-beta.16",
 		"@tiptap/pm": "^3.0.0-beta.16",
 		"@tiptap/starter-kit": "^3.0.0-beta.16",
-		"drizzle-orm": "^0.40.0"
+		"drizzle-orm": "^0.40.0",
+		"oslo": "^1.2.1"
 	}
 }
