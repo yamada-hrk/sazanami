@@ -12,6 +12,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
+		"db:generate": "drizzle-kit generate",
 		"db:push": "drizzle-kit push",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio"
@@ -46,6 +47,9 @@
 		"@node-rs/argon2": "^2.0.2",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
+		"@tiptap/core": "^3.0.0-beta.16",
+		"@tiptap/pm": "^3.0.0-beta.16",
+		"@tiptap/starter-kit": "^3.0.0-beta.16",
 		"drizzle-orm": "^0.40.0"
 	}
 }
