@@ -14,7 +14,7 @@
 			onTransaction: () => {
 				// force re-render so `editor.isActive` works as expected
 				editor = editor;
-			},
+			}
 		});
 	});
 
@@ -26,38 +26,36 @@
 </script>
 
 <div class="m-20 border-b">
-
-    
-    {#if editor}
-	<button
-    on:click={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-    class:active={editor.isActive('heading', { level: 1 })}
-	>
-    H1
-</button>
-<button
-on:click={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-class:active={editor.isActive('heading', { level: 2 })}
->
-H2
-</button>
-<button
-on:click={() => editor.chain().focus().setParagraph().run()}
-class:active={editor.isActive('paragraph')}
->
-P
-</button>
-{/if}
+	{#if editor}
+		<button
+			on:click={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+			class:active={editor.isActive('heading', { level: 1 })}
+		>
+			H1
+		</button>
+		<button
+			on:click={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+			class:active={editor.isActive('heading', { level: 2 })}
+		>
+			H2
+		</button>
+		<button
+			on:click={() => editor.chain().focus().setParagraph().run()}
+			class:active={editor.isActive('paragraph')}
+		>
+			P
+		</button>
+	{/if}
 </div>
 
-<div bind:this={element} class="card bg-base-200 h-100 m-30 p-10 " />
+<div bind:this={element} class="card bg-base-200 m-30 h-100 p-10" />
 
 <style>
-    button.active {
-        background: black;
+	button.active {
+		background: black;
 		color: white;
 	}
-    h1{
-        font-size: large;
-    }
+	h1 {
+		font-size: large;
+	}
 </style>
