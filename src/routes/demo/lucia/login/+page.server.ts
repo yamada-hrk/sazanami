@@ -1,5 +1,5 @@
-import { Scrypt } from 'oslo/password';
-import { encodeBase32LowerCase } from '@oslojs/encoding';
+import { scrypt } from 'scrypt-js';
+import { Buffer } from 'node:buffer'; // scrypt-jsで必要になります
 import { fail, redirect } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import * as auth from '$lib/server/auth';
@@ -36,8 +36,20 @@ export const actions: Actions = {
 			return fail(400, { message: 'Incorrect username or password' });
 		}
 
-		const validPassword = await new Scrypt().verify(existingUser.passwordHash, password);
-		
+		const [saltHex, storedHashHex] = existingUser.passwordHash.split(':');
+		if (!saltHex || !storedHashHex) {
+			// 保存されているハッシュの形式が不正な場合
+			return fail(500, { message: 'Stored password hash is invalid' });
+		}
+		const salt = Buffer.from(saltHex, 'hex');
+		const passwordBuffer = Buffer.from(password, 'utf-8');
+
+		// 入力されたパスワードとDBのソルトでハッシュを再計算
+		const hashToVerifyBytes = await scrypt(passwordBuffer, salt, 16384, 8, 1, 32);
+
+		// 計算したハッシュが、DBに保存されていたものと一致するか比較
+		const validPassword = Buffer.from(hashToVerifyBytes).toString('hex') === storedHashHex;
+
 		if (!validPassword) {
 			return fail(400, { message: 'Incorrect username or password' });
 		}
@@ -61,7 +73,13 @@ export const actions: Actions = {
 		}
 
 		const userId = generateUserId();
-		const passwordHash = await new Scrypt().hash(password);
+		const salt = crypto.getRandomValues(new Uint8Array(16));
+		const passwordBuffer = Buffer.from(password, 'utf-8');
+
+		const hashBytes = await scrypt(passwordBuffer, salt, 16384, 8, 1, 32);
+
+		// ソルトとハッシュ値を結合して、一つの文字列としてDBに保存
+		const passwordHash = `${Buffer.from(salt).toString('hex')}:${Buffer.from(hashBytes).toString('hex')}`;
 
 		try {
 			await db.insert(table.user).values({ id: userId, username, passwordHash });
@@ -77,10 +95,7 @@ export const actions: Actions = {
 };
 
 function generateUserId() {
-	// ID with 120 bits of entropy, or about the same as UUID v4.
-	const bytes = crypto.getRandomValues(new Uint8Array(15));
-	const id = encodeBase32LowerCase(bytes);
-	return id;
+	return crypto.randomUUID();
 }
 
 function validateUsername(username: unknown): username is string {

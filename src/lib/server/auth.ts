@@ -1,7 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
-import { sha256 } from '@oslojs/crypto/sha2';
-import { encodeBase64url, encodeHexLowerCase } from '@oslojs/encoding';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
 
@@ -9,14 +7,36 @@ const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
 export const sessionCookieName = 'auth-session';
 
+// SHA-256ハッシュを計算し、16進数文字列に変換する関数
+async function sha256Hex(message: string): Promise<string> {
+	const data = new TextEncoder().encode(message);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Base64urlエンコードを行う関数
+function encodeBase64Url(bytes: Uint8Array): string {
+	let binary = '';
+	const len = bytes.byteLength;
+	for (let i = 0; i < len; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+	// btoaでBase64エンコードし、URLセーフな文字に置換
+	return btoa(binary)
+		.replace(/\+/g, '-')
+		.replace(/\//g, '_')
+		.replace(/=+$/, '');
+}
+
 export function generateSessionToken() {
 	const bytes = crypto.getRandomValues(new Uint8Array(18));
-	const token = encodeBase64url(bytes);
+	const token = encodeBase64Url(bytes);
 	return token;
 }
 
 export async function createSession(token: string, userId: string) {
-	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+	const sessionId = await sha256Hex(token);
 	const session: table.Session = {
 		id: sessionId,
 		userId,
@@ -27,7 +47,7 @@ export async function createSession(token: string, userId: string) {
 }
 
 export async function validateSessionToken(token: string) {
-	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+	const sessionId = await sha256Hex(token);
 	const [result] = await db
 		.select({
 			// Adjust user table here to tweak returned data
